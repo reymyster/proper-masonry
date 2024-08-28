@@ -19,43 +19,45 @@ export default function Home() {
   if (!hasMounted) return null;
 
   return (
-    <main className="@container/menu flex min-h-screen flex-col p-4">
+    <main className="@container/menu flex min-h-screen flex-col items-center p-4">
       <Menu data={AccountingMenuData} />
     </main>
   );
 }
 
 /*
+  these should be told to tailwind more explicitly, just doing this for now
+
+  @[632px]/menu:grid
+  @[948px]/menu:grid
+  @[1264px]/menu:grid
+  @[1580px]/menu:grid
+  @[1896px]/menu:grid
+  @[2212px]/menu:grid
+  @[2258px]/menu:grid
+  @[2844px]/menu:grid
+  @[3160px]/menu:grid
+
   @[632px]/menu:grid-cols-2
-    @[632px]/menu:col-start-1
-    @[632px]/menu:col-start-2
   @[948px]/menu:grid-cols-3
-    @[948px]/menu:col-start-1
-    @[948px]/menu:col-start-2
-    @[948px]/menu:col-start-3
   @[1264px]/menu:grid-cols-4
-    @[1264px]/menu:col-start-1
-    @[1264px]/menu:col-start-2
-    @[1264px]/menu:col-start-3
-    @[1264px]/menu:col-start-4
   @[1580px]/menu:grid-cols-5
-    @[1580px]/menu:col-start-1
-    @[1580px]/menu:col-start-2
-    @[1580px]/menu:col-start-3
-    @[1580px]/menu:col-start-4
-    @[1580px]/menu:col-start-5
   @[1896px]/menu:grid-cols-6
-    @[1896px]/menu:col-start-1
-    @[1896px]/menu:col-start-2
-    @[1896px]/menu:col-start-3
-    @[1896px]/menu:col-start-4
-    @[1896px]/menu:col-start-5
-    @[1896px]/menu:col-start-6
   @[2212px]/menu:grid-cols-7
   @[2258px]/menu:grid-cols-8
   @[2844px]/menu:grid-cols-9
   @[3160px]/menu:grid-cols-10
 
+
+  @[632px]/menu:hidden
+  @[948px]/menu:hidden
+  @[1264px]/menu:hidden
+  @[1580px]/menu:hidden
+  @[2212px]/menu:hidden
+  @[2258px]/menu:hidden
+  @[1896px]/menu:hidden
+  @[2844px]/menu:hidden
+  @[3160px]/menu:hidden
 */
 
 function Menu({ data }: { data: MenuItem[] }) {
@@ -64,56 +66,54 @@ function Menu({ data }: { data: MenuItem[] }) {
   const maxScreenWidth = 3200;
   const maxColumns = Math.floor(maxScreenWidth / columnWidth);
 
-  // skipping col 1 since that's the default / don't need to process it
-  const colScenarios = Array(maxColumns)
+  const containers = Array(maxColumns)
     .fill(0)
-    .map((_, i) => i + 1)
-    .filter((v) => v > 1);
-  const breakpoints = colScenarios.map((col) => ({
-    selector: `@[${columnWidth * col}px]/menu`,
-    number: col,
-  }));
+    .map((_, mcIdx) => {
+      const columnsInThisContainer = mcIdx + 1;
+      if (columnsInThisContainer === 1) {
+        // base case
+        return (
+          <div className="@[632px]/menu:hidden">
+            {data.map((menu, idx) => (
+              <TopLevelMenu key={idx} data={menu} />
+            ))}
+          </div>
+        );
+      } else {
+        const thisBreakpoint = `@[${columnWidth * columnsInThisContainer}px]/menu`;
+        const nextBreakpoint = `@[${columnWidth * (columnsInThisContainer + 1)}px]/menu`;
+        const columns = Array(columnsInThisContainer)
+          .fill(0)
+          .map((_, column) => ({ column, count: 0, items: [] as MenuItem[] }));
 
-  const gridColumnSetup = breakpoints
-    .map((c) => `${c.selector}:grid-cols-${c.number}`)
-    .join(" ");
+        for (let i = 0; i < data.length; i++) {
+          const nextAvailableColumn = columns.toSorted((a, b) =>
+            a.count === b.count ? a.column - b.column : a.count - b.count,
+          )[0];
+          nextAvailableColumn.count += 2 + (data[i].children?.length ?? 0);
+          nextAvailableColumn.items.push(data[i]);
+        }
+        return (
+          <div
+            className={cn(
+              "hidden",
+              `${thisBreakpoint}:grid ${thisBreakpoint}:grid-cols-${columnsInThisContainer} gap-x-8`,
+              `${nextBreakpoint}:hidden`,
+            )}
+          >
+            {columns.map((col) => (
+              <div key={col.column} className="flex flex-col">
+                {col.items.map((item) => (
+                  <TopLevelMenu key={item.title} data={item} />
+                ))}
+              </div>
+            ))}
+          </div>
+        );
+      }
+    });
 
-  const colPlacements = breakpoints.map((col) => {
-    const holder = Array(col.number)
-      .fill(0)
-      .map((_, i) => ({ index: i + 1, count: 0 }));
-
-    const map = new Map<number, number>();
-
-    for (let i = 0; i < data.length; i++) {
-      const nextAvailableColumn = holder.toSorted((a, b) =>
-        a.count === b.count ? a.index - b.index : a.count - b.count,
-      )[0];
-      map.set(i, nextAvailableColumn.index);
-      nextAvailableColumn.count += 2 + (data[i].children?.length ?? 0);
-    }
-
-    return map;
-  });
-
-  console.log({ colPlacements });
-
-  return (
-    <div className={cn("grid grid-rows-1", gridColumnSetup)}>
-      {data.map((item, idx) => {
-        const placements = breakpoints
-          .map((col, colIdx) => {
-            const place = colPlacements[colIdx].get(idx);
-            return `${col.selector}:col-start-${place}`;
-          })
-          .join(" ");
-
-        // const orig = `@[300px]/menu:col-start-1 @[600px]/menu:col-start-2`;
-
-        return <TopLevelMenu key={idx} data={item} className={placements} />;
-      })}
-    </div>
-  );
+  return containers;
 }
 
 function TopLevelMenu({
@@ -152,7 +152,7 @@ function SecondLevelMenu({ data }: { data: MenuItem }) {
           className={cn(baseMenuItemClasses, "flex flex-row justify-between")}
         >
           {data.title}
-          <ChevronDownIcon />
+          <ChevronDownIcon className="mr-4" />
         </summary>
         {data.children?.map((child) => (
           <DisplayMenuItem key={child.title} data={child} className="ml-4" />
