@@ -1,23 +1,8 @@
-"use client";
-
-export const dynamic = "force-dynamic";
-
-import { useEffect, useState } from "react";
 import { ChevronDownIcon } from "lucide-react";
 import { type MenuItem, AccountingMenuData } from "@/data/menu";
 import { cn } from "@/lib/utils";
-import { ClassValue } from "clsx";
 
 export default function Home() {
-  const [hasMounted, setHasMounted] = useState(false);
-
-  // doing this because toSorted doesn't work on server side yet?
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  if (!hasMounted) return null;
-
   return (
     <main className="@container/menu flex min-h-screen flex-col items-center p-4">
       <Menu data={AccountingMenuData} />
