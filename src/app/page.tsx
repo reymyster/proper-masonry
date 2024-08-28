@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export default function Home() {
   return (
-    <main className="@container/menu flex min-h-screen flex-col items-center p-4">
+    <main className="@container/menu flex min-h-screen select-none flex-col items-center p-4">
       <Menu data={AccountingMenuData} />
     </main>
   );
@@ -127,8 +127,7 @@ function TopLevelMenu({
   );
 }
 
-const baseMenuItemClasses =
-  "h-[35px] cursor-pointer select-none py-2 text-stone-500";
+const baseMenuItemClasses = "h-[35px] cursor-pointer py-2 text-stone-500";
 
 function SecondLevelMenu({ data }: { data: MenuItem }) {
   if ((data.children?.length ?? 0) > 0) {
