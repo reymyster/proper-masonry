@@ -73,7 +73,7 @@ function Menu({ data }: { data: MenuItem[] }) {
       if (columnsInThisContainer === 1) {
         // base case
         return (
-          <div className="@[632px]/menu:hidden">
+          <div key={mcIdx} className="@[632px]/menu:hidden">
             {data.map((menu, idx) => (
               <TopLevelMenu key={idx} data={menu} />
             ))}
@@ -95,6 +95,7 @@ function Menu({ data }: { data: MenuItem[] }) {
         }
         return (
           <div
+            key={mcIdx}
             className={cn(
               "hidden",
               `${thisBreakpoint}:grid ${thisBreakpoint}:grid-cols-${columnsInThisContainer} gap-x-8`,
