@@ -1,4 +1,4 @@
-type MenuItem = {
+export type MenuItem = {
   title: string;
   children?: MenuItem[];
 };
